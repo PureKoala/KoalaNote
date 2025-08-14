@@ -94,5 +94,36 @@
   - 0x2F00000 + cpu_id * 4
 
 
+## 2 PLIC 逻辑与寄存器说明
+
+简单的讲，PLIC 的逻辑分为 gateway 和 core 两大部分：
+- **gateway** 控制着外设的中断信号能否进入 PLIC。
+- **core** 是 PLIC 具体的处理逻辑。
+
+大的逻辑上看，外设的中断信息可能被送到任意 hart 的外部中断输入管脚上，但是具体会送到哪个 hart 的哪个外部中断输入管脚上，就要看 PLIC 的配置。
+
+PLIC 上的几个关键定义有：
+- **中断 ID (Interrupt Identifier)**：区分不同外设的中断，不同外设的中断会固定接到不同的中断 ID 上，这个定义会在机器硬件描述信息中体现，比如描述在 DTS 里。
+- **中断通知 (Interrupt Notification)**：PLIC 为它支持的每个中断设置一个 pending bit，用这个 pending bit 表示对应外设触发了相关的中断。PLIC spec 里叫这个是 Interrupt Notification。注意，每个外设的中断在 PLIC 里也只能 pending 一个，这个设计就有点简单了。
+- **target context** 概念：简单看就是一个 core 上，M mode 外部中断是一个 target context，S mode 外部中断是一个 target context。理论上每个输入 PLIC 的中断都可以输出到任何一个 core 的任何一个 target context 上。PLIC 可以通过下面的 enable register 使能和关闭相关的输出路径，可见 enable register 是一个中断源和 target context 相乘之积大小的配置表。
+
+PLIC 中的配置全部通过 MMIO 接口进行，所支持的中断的 pending 和 enable 也都全部在 MMIO 配置，这种设计真是简单粗暴啊。
+
+下面把每个寄存器的定义展开，进一步说明 PLIC：
+
+- **priority register**
+  - 针对每个中断源的优先级配置，每个中断源都可以配置一个优先级。
+- **pending bits register**
+  - 针对每个中断源的配置。
+- **enable register**
+  - 如上提到的，每个中断源在每个 target context 下都有一个 enable bit 去配置。
+- **threshold register**
+  - 针对每个 target context 的配置，当中断源的 priority 数值大于 target context 的数值时，这个中断源的中断才能报给对应的 target context。
+- **claim register**
+  - 针对每个 target context 的配置，target context 从 claim 寄存器中读到中断 ID 号。
+- **complete register**
+  - 针对每个 target context 的配置，target context 通过这个寄存器告诉 PLIC 中断已经处理，PLIC 在这之后才会打开 gateway，让后面的中断进来。
+
+
 
 
