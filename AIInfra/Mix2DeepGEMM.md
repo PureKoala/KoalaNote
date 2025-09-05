@@ -12,6 +12,8 @@
 
 - [浅读 DeepGEMM](https://wu-kan.cn/2025/03/03/%E6%B5%85%E8%AF%BB-DeepGEMM/)
 
+- [Understanding FP8 and Mixed Precision Training](https://medium.com/@noelakkidas/understanding-fp8-and-mixed-precision-training-0a76c7f2c3ac)
+
 
 
 ## 混合精度训练
